@@ -1,6 +1,7 @@
+#include <iostream>
 #include "BEncoding.hpp"
 
-using namespace BitTorrent::BEncoding;
+using namespace BitTorrent;
 
 namespace
 {
@@ -18,11 +19,6 @@ TextFile::TextFile(const std::filesystem::path &path): file_{path.string()}
         printf("Error: cannot open file from path: %s", path.string().c_str());
 }
 
-TextFile::~TextFile()
-{
-    file_.close();
-}
-
 char TextFile::getNextChar()
 {
     char ch;
@@ -30,54 +26,82 @@ char TextFile::getNextChar()
     return ch;
 }
 
-std::map<std::string, Object> BitTorrent::BEncoding::Decode(std::filesystem::path &path)
+char TextFile::getPreviousChar()
 {
-    TextFile file(path);
-    std::map<std::string, Object> dictionary;
-    char ch;
+    file_.seekg(-2, std::ios::cur);
+    return getNextChar();
 }
 
-int32_t BitTorrent::BEncoding::DecodeInteger(TextFile &file)
+std::map<std::string, std::any> BEncoding::Decode()
+{
+    return DecodeDictionary();
+}
+
+std::any BEncoding::getNextObject()
+{
+    std::any object;
+    char ch = file_.getNextChar();
+    if (ch == dictionaryStart)
+        object = DecodeDictionary();
+    else if (ch == integerStart)
+        object = DecodeInteger();
+    else if (ch == listStart)
+        ;
+    else if (isdigit(ch))
+        object = DecodeString();
+    else
+        object.reset();
+    return object;
+}
+
+int32_t BEncoding::DecodeInteger()
 {
     std::ostringstream oss;
-    for (char ch = file.getNextChar(); ch != typeEnd; ch = file.getNextChar())
+    for (char ch = file_.getNextChar(); ch != typeEnd; ch = file_.getNextChar())
         oss << ch;
+    std::cout << oss.str() << std::endl;
     int32_t num = std::stoi(oss.str());
     return num;
 }
 
-std::string BitTorrent::BEncoding::DecodeString(TextFile &file, int length)
+std::string BEncoding::DecodeString()
 {
     std::ostringstream oss;
+    char c = file_.getPreviousChar();
+    for (c; c != stringDivider; c = file_.getNextChar())
+    {
+        oss << c;
+    }
+    std::string s = oss.str();
+    std::cout << s << std::endl;
+    int length = std::stoi(oss.str());
+
+    oss.clear();
     for (int i = 0; i < length; ++i)
     {
-        oss << file.getNextChar();
+        oss << file_.getNextChar();
     }
+    std::cout << oss.str() << std::endl;
     return oss.str();
 }
 
-std::map<std::string, Object> BitTorrent::BEncoding::DecodeDictionary(TextFile &file)
+std::map<std::string, std::any> BEncoding::DecodeDictionary()
 {
-    std::map<std::string, Object> dictionary;
-    char ch = file.getNextChar();
-    while (ch != typeEnd)
+    std::map<std::string, std::any> dictionary;
+    for (std::any key = getNextObject(), value = getNextObject(); key.has_value() && value.has_value();
+            key = getNextObject(), value = getNextObject())
     {
-        std::string key;
-        if (isdigit(ch))
-        {
-            std::ostringstream oss;
-            oss << ch;
-            for (char c = file.getNextChar(); c != stringDivider; c = file.getNextChar())
-            {
-                oss << c;
-            }
-            key = DecodeString(file, std::stoi(oss.str()));
-        }
-
-        Object value;
-        if (ch == integerStart)
-            value.data = DecodeInteger(file);
-//        else if (isdigit(ch))
-//            value.data = DecodeString(file)
+        dictionary[std::any_cast<std::string>(key)] = value;
     }
+    return dictionary;
 }
+
+std::vector<std::any> BEncoding::DecodeList()
+{
+    std::vector<std::any> vec;
+    for (std::any object = getNextObject(); object.has_value(); object = getNextObject())
+            vec.push_back(object);
+    return vec;
+}
+
+
