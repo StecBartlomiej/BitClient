@@ -7,6 +7,7 @@ include_directories(src)
 
 set(SOURCE
         src/Torrent.cpp
+        src/BEncoding.cpp
     )
 
 add_executable(BitClient main.cpp ${SOURCE})
