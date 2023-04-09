@@ -3,14 +3,6 @@
 
 using namespace BitTorrent;
 
-namespace
-{
-    char dictionaryStart = 'd';
-    char listStart = 'l';
-    char integerStart = 'i';
-    char stringDivider = ':';
-    char typeEnd = 'e';
-}
 
 TextFile::TextFile(const std::filesystem::path &path): file_{path.string()}
 {
@@ -19,89 +11,79 @@ TextFile::TextFile(const std::filesystem::path &path): file_{path.string()}
         printf("Error: cannot open file from path: %s", path.string().c_str());
 }
 
-char TextFile::getNextChar()
+char TextFile::GetNextChar()
 {
     char ch;
     file_.get(ch);
     return ch;
 }
 
-char TextFile::getPreviousChar()
+char TextFile::GetPreviousChar()
 {
-    file_.seekg(-2, std::ios::cur);
-    return getNextChar();
+    Move(-2);
+    return GetNextChar();
 }
 
-std::map<std::string, std::any> BEncoding::Decode()
+bool BitTorrent::isEmpty(const VarType &varType)
 {
-    return DecodeDictionary();
+    return varType.which() == 0;
 }
 
-std::any BEncoding::getNextObject()
+// TODO - fix bug
+VarType Decoder::Decode()
 {
-    std::any object;
-    char ch = file_.getNextChar();
-    if (ch == dictionaryStart)
-        object = DecodeDictionary();
-    else if (ch == integerStart)
-        object = DecodeInteger();
+    char ch = file_.GetNextChar();
+    if (ch == integerStart)
+    {
+        std::ostringstream oss;
+        for (char c = file_.GetNextChar(); c != typeEnd; c = file_.GetNextChar())
+            oss << c;
+        std::string s = oss.str();
+        return std::stoi(s);
+    }
     else if (ch == listStart)
-        ;
-    else if (isdigit(ch))
-        object = DecodeString();
+    {
+        std::vector<VarType> vec;
+        for (char c = file_.GetNextChar(); c != typeEnd; c = file_.GetNextChar())
+        {
+            file_.Move(-2);
+            vec.push_back(Decode());
+        }
+        return vec;
+    }
+    else if (ch == dictionaryStart)
+    {
+        std::map<std::string, VarType> map;
+        for (char c = file_.GetNextChar(); std::to_string(c) != std::to_string(typeEnd); c = file_.GetNextChar())
+        {
+            file_.Move(-2);
+            VarType key = Decode();
+            VarType value = Decode();
+            try
+            {
+                map[boost::get<std::string>(key)] = value;
+            }
+            catch (boost::bad_get &err)
+            {
+                std::cerr << "ERRor" << std::endl;
+                break;
+            }
+        }
+        return map;
+    }
+    else if (std::isdigit(ch))
+    {
+        std::ostringstream oss;
+        for (char c = file_.GetPreviousChar(); c != stringDivider; c = file_.GetNextChar())
+            oss << c;
+
+        int length = std::stoi(oss.str());
+        oss.str("");
+        oss.clear();
+        for (int i = 0; i < length; ++i)
+            oss << file_.GetNextChar();
+        return oss.str();
+    }
     else
-        object.reset();
-    return object;
+        return typeEnd;
 }
-
-int32_t BEncoding::DecodeInteger()
-{
-    std::ostringstream oss;
-    for (char ch = file_.getNextChar(); ch != typeEnd; ch = file_.getNextChar())
-        oss << ch;
-    std::cout << oss.str() << std::endl;
-    int32_t num = std::stoi(oss.str());
-    return num;
-}
-
-std::string BEncoding::DecodeString()
-{
-    std::ostringstream oss;
-    char c = file_.getPreviousChar();
-    for (c; c != stringDivider; c = file_.getNextChar())
-    {
-        oss << c;
-    }
-    std::string s = oss.str();
-    std::cout << s << std::endl;
-    int length = std::stoi(oss.str());
-
-    oss.clear();
-    for (int i = 0; i < length; ++i)
-    {
-        oss << file_.getNextChar();
-    }
-    std::cout << oss.str() << std::endl;
-    return oss.str();
-}
-
-std::map<std::string, std::any> BEncoding::DecodeDictionary()
-{
-    std::map<std::string, std::any> dictionary;
-    for (std::any key = getNextObject(), value = getNextObject(); key.has_value() && value.has_value();
-            key = getNextObject(), value = getNextObject())
-    {
-        dictionary[std::any_cast<std::string>(key)] = value;
-    }
-    return dictionary;
-}
-
-std::vector<std::any> BEncoding::DecodeList()
-{
-    std::vector<std::any> vec;
-    for (std::any object = getNextObject(); object.has_value(); object = getNextObject())
-            vec.push_back(object);
-    return vec;
-}
-
-

@@ -6,38 +6,41 @@
 #include <map>
 #include <vector>
 #include <fstream>
-#include <variant>
 #include <any>
+#include <boost/variant.hpp>
 
 namespace BitTorrent
 {
-    /// TODO - add option to write/read
+    using VarType = boost::make_recursive_variant<
+            boost::blank,
+            std::string,
+            int64_t,
+            std::vector<boost::recursive_variant_>,
+            std::map<std::string, boost::recursive_variant_>
+            >::type;
+
+    bool isEmpty(const VarType &varType);
+
     class TextFile
     {
     public:
         TextFile(const std::filesystem::path &path);
         ~TextFile() { file_.close(); }
 
-        char getNextChar();
-        char getPreviousChar();
-        bool eof() const { return file_.eof(); }
+        char GetNextChar();
+        char GetPreviousChar();
+        bool Eof() const { return file_.eof(); }
+        void Move(int offset) { file_.seekg(offset, std::ios::cur); }
     private:
         std::ifstream file_;
     };
 
-    class BEncoding
+    class Decoder
     {
     public:
-        BEncoding(const std::filesystem::path &path): file_{path} {}
+        explicit Decoder(const std::filesystem::path &path): file_{path} {}
 
-        std::map<std::string, std::any> Decode();
-
-    private:
-        std::any getNextObject();
-        std::map<std::string, std::any> DecodeDictionary();
-        std::vector<std::any> DecodeList();
-        int32_t DecodeInteger();
-        std::string DecodeString();
+        VarType Decode();
     private:
         TextFile file_;
         static constexpr char dictionaryStart = 'd';
@@ -47,21 +50,52 @@ namespace BitTorrent
         static constexpr char typeEnd = 'e';
     };
 
-    struct Object
+    struct Printer : boost::static_visitor<std::string>
     {
-        std::variant<std::string, int32_t, std::map<std::string, Object>, std::vector<Object>> data;
+        template<BOOST_VARIANT_ENUM_PARAMS(typename T)>
+        std::string operator()(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> &var) const
+        {
+            return boost::apply_visitor(Printer(), var);
+        }
+
+        template<typename T>
+        std::string operator()(const std::vector<T> &vec) const
+        {
+            std::ostringstream oss;
+            oss << "{ ";
+
+            typename std::vector<T>::const_iterator it = vec.begin();
+            for (; it != vec.end(); ++it)
+                oss << Printer()(*it);
+
+            oss << "} ";
+            return oss.str();
+        }
+
+        template<typename T>
+        std::string operator()(const std::map<std::string, T> &map) const
+        {
+            std::ostringstream oss;
+            oss << "[ ";
+
+            typename std::map<std::string, T>::const_iterator it = map.begin();
+            for (; it != map.end(); ++it)
+            {
+                oss << it->first << " => " << Printer()(it->second);
+                if (std::next(it) != map.end())
+                    oss << "\n";
+            }
+
+            oss << "] ";
+            return oss.str();
+        }
+
+        std::string operator()(int64_t i) const { return " " + std::to_string(i); }
+
+        std::string operator()(const std::string &s) const { return " " + s; }
+
+        std::string operator()(boost::blank blank) const { return ""; }
     };
-
-
-    std::map<std::string, Object> DecodeFile(std::filesystem::path &path);
-
-    std::string DecodeString(TextFile &file);
-
-    int32_t DecodeInteger(TextFile &file);
-
-    std::map<std::string, Object> DecodeDictionary(TextFile &file);
-
-    std::vector<Object> DecodeList(TextFile &file);
 }
 
 #endif //BITCLIENT_BENCODING_HPP
