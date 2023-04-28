@@ -28,6 +28,9 @@ namespace BitTorrent
         std::ifstream file;
     };
 
+    std::vector<std::string> Split(const std::filesystem::path &path);
+    void Parse(TextFile &file, std::vector<std::string> &vector);
+
     class Decoder
     {
     public:

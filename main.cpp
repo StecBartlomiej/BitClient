@@ -11,6 +11,7 @@ int main()
     BitTorrent::VarType map = decoder.Decode();
     std::cout << BitTorrent::Printer()(map) << std::endl;
 
+    BitTorrent::Split(path);
 //    std::ifstream file(path);
 //    std::size_t count = 1;
 //    std::uint8_t byte;
