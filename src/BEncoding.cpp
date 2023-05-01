@@ -39,8 +39,8 @@ std::vector<std::string> Decoder::Decode()
 
     DecodeInternal(vector);
 
-    for (std::string_view x: vector)
-        std::cout << x << std::endl;
+//    for (std::string_view x: vector)
+//        std::cout << x << std::endl;
 
     return vector;
 }
@@ -52,7 +52,7 @@ void Decoder::DecodeInternal(std::vector<std::string> &vector)
     {
         if (ch == 'i')
         {
-            vector.emplace_back(std::to_string('i'));
+            vector.emplace_back("i");
             std::ostringstream oss;
             for (char c = file_.GetNextChar(); c != 'e'; c = file_.GetNextChar())
                 oss << c;
@@ -80,7 +80,7 @@ void Decoder::DecodeInternal(std::vector<std::string> &vector)
         {
             vector.emplace_back("s");
             std::ostringstream oss;
-            for (char c = file_.GetPreviousChar(); c != ':'; c = file_.GetNextChar())
+            for (char c = ch; c != ':'; c = file_.GetNextChar())
                 oss << c;
 
             int length = std::stoi(oss.str());
@@ -111,7 +111,10 @@ void Decoder::DecodeInternal(std::vector<std::string> &vector)
             return;
         }
         else
+        {
             LOG_ERROR("Decode: bad type in BEncoding");
+            return;
+        }
         ch = file_.GetNextChar();
     }
 }

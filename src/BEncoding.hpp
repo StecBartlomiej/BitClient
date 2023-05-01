@@ -31,7 +31,6 @@ namespace BitTorrent
     public:
         explicit Decoder(const std::filesystem::path &path): file_{path} {}
 
-        // TODO - serializes to object
         std::vector<std::string> Decode();
     private:
         void DecodeInternal(std::vector<std::string> &vector);
