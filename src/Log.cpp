@@ -5,7 +5,7 @@ namespace BitTorrent
 {
     void Log::Init()
     {
-        spdlog::set_pattern("%^[%T] %n: %v%$");
+        spdlog::set_pattern("%^[%T] %v%$");
         clientLogger_ = spdlog::stdout_color_mt("Console");
         clientLogger_->set_level(spdlog::level::trace);
     }

@@ -7,9 +7,8 @@ using namespace BitTorrent;
 TextFile::TextFile(const std::filesystem::path &path): file{path.string()}
 {
     /// TODO - improve error logging
-    LOG_ERROR("Opened file: {0}", path.string());
     if (!file.is_open())
-        printf("Error: cannot open file from path: %s", path.string().c_str());
+        LOG_WARN("Cannot open text file {0}", path.string());
 }
 
 char TextFile::GetNextChar()
@@ -113,7 +112,7 @@ void Decoder::DecodeInternal(std::vector<std::string> &vector)
             return;
         }
         else
-            std::cerr << "Error: BitTorrent::Parser bad type" << std::endl;
+            LOG_ERROR("Decode: bad type in BEncoding");
         ch = file_.GetNextChar();
     }
 }
