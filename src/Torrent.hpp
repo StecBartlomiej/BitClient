@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-
+#include <cinttypes>
 
 namespace BitTorrent
 {

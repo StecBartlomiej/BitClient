@@ -9,7 +9,6 @@
 
 namespace BitTorrent
 {
-
     class TextFile
     {
     public:

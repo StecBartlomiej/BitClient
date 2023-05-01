@@ -6,7 +6,6 @@ using namespace BitTorrent;
 
 TextFile::TextFile(const std::filesystem::path &path): file{path.string()}
 {
-    /// TODO - improve error logging
     if (!file.is_open())
         LOG_WARN("Cannot open text file {0}", path.string());
 }

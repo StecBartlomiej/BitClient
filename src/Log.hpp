@@ -5,7 +5,6 @@
 
 #include <memory>
 
-
 #define LOG_TRACE(args...) ::BitTorrent::Log::GetClient()->trace(args)
 #define LOG_INFO(args...) ::BitTorrent::Log::GetClient()->info(args)
 #define LOG_WARN(args...) ::BitTorrent::Log::GetClient()->warn(args)

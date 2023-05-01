@@ -1,7 +1,5 @@
 #include "BEncoding.hpp"
-
 #include "Log.hpp"
-
 
 int main()
 {
@@ -9,7 +7,6 @@ int main()
     std::filesystem::path path("test.txt");
 
     BitTorrent::Decoder decoder(path);
-
     auto vec = decoder.Decode();
 
     return 0;

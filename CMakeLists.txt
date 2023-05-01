@@ -10,15 +10,14 @@ include_directories(
 )
 
 set(SOURCE
+        main.cpp
         src/Torrent.cpp
         src/BEncoding.cpp
         src/Log.cpp
     )
 
-
+add_executable(BitClient ${SOURCE})
+target_precompile_headers(BitClient PRIVATE <iostream> <vector> <map> <string> <filesystem> <memory> <fstream>)
 
 include(lib/CMakeLists.txt)
-
-
-add_executable(BitClient main.cpp ${SOURCE})
-target_link_libraries(BitClient PRIVATE spdlog)
+target_link_libraries(BitClient PRIVATE spdlog::spdlog)
