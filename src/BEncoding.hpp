@@ -1,14 +1,11 @@
 #ifndef BITCLIENT_BENCODING_HPP
 #define BITCLIENT_BENCODING_HPP
 
-#include "BEncodingType.hpp"
-
 #include <filesystem>
 #include <string>
 #include <map>
 #include <vector>
 #include <fstream>
-#include <boost/variant.hpp>
 
 namespace BitTorrent
 {
@@ -24,27 +21,37 @@ namespace BitTorrent
         bool Eof() const { return file.eof(); }
         void Move(int offset) { file.seekg(offset, std::ios::cur); }
 
+        friend std::ostream& operator<<(TextFile &file, std::vector<std::string> &vector);
     public:
-        std::ifstream file;
+        std::fstream file;
     };
 
-    std::vector<std::string> Split(const std::filesystem::path &path);
-    void Parse(TextFile &file, std::vector<std::string> &vector);
 
     class Decoder
     {
     public:
-        explicit Decoder(const std::filesystem::path &path): textFile_{path} {}
+        explicit Decoder(const std::filesystem::path &path): file_{path} {}
 
-        VarType Decode();
+        // TODO - serializes to object
+        std::vector<std::string> Decode();
     private:
-        TextFile textFile_;
-        static constexpr char dictionaryStart = 'd';
-        static constexpr char listStart = 'l';
-        static constexpr char integerStart = 'i';
-        static constexpr char stringDivider = ':';
-        static constexpr char typeEnd = 'e';
+        void DecodeInternal(std::vector<std::string> &vector);
+    private:
+        TextFile file_;
     };
+
+    class Encoder
+    {
+    public:
+        explicit Encoder(const std::filesystem::path &path): file_{path} {}
+
+        // TODO - deserialize
+//        void Encode()
+    private:
+        TextFile file_;
+    };
+
+
 }
 
 #endif //BITCLIENT_BENCODING_HPP
