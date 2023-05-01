@@ -1,9 +1,11 @@
 #include "BEncoding.hpp"
-#include <boost/regex.hpp>
-#include <bitset>
+
+#include "Log.hpp"
+
 
 int main()
 {
+    BitTorrent::Log::Init();
     std::filesystem::path path("test.txt");
 
     BitTorrent::Decoder decoder(path);

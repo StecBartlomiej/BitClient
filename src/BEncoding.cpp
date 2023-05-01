@@ -1,13 +1,13 @@
 #include "BEncoding.hpp"
 #include <iostream>
-#include "BEncoding.hpp"
+#include "Log.hpp"
 
 using namespace BitTorrent;
-
 
 TextFile::TextFile(const std::filesystem::path &path): file{path.string()}
 {
     /// TODO - improve error logging
+    LOG_ERROR("Opened file: {0}", path.string());
     if (!file.is_open())
         printf("Error: cannot open file from path: %s", path.string().c_str());
 }
