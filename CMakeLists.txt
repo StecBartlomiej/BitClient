@@ -12,6 +12,7 @@ include_directories(
 set(SOURCE
         src/Torrent.cpp
         src/BEncoding.cpp
+        src/BEncodingType.hpp
         src/Log.cpp
     )
 
