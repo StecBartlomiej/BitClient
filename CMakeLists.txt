@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(BitClient)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 20)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(
         src
@@ -14,6 +14,7 @@ set(SOURCE
         src/BEncoding.cpp
         src/BEncodingType.hpp
         src/Log.cpp
+        src/parser/ConstexprTypes.hpp
     )
 
 add_executable(BitClient main.cpp ${SOURCE})
