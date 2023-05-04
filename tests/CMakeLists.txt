@@ -10,6 +10,7 @@ FetchContent_MakeAvailable(googletest)
 set(TEST_SOURCE
         tests/main.cpp
         tests/BEncodingTest.cpp
+        tests/ConstexprTypesTest.cpp
         )
 
 
